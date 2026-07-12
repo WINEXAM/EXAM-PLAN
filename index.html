@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether | Student Timetable & Study Plan Generator</title>
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Premium Gradient Orbs Background -->
+    <div class="gradient-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- ==================== VIEW 1: AUTHENTICATION ==================== -->
+        <div id="auth-view" class="glass-panel auth-card fade-in">
+            <div class="auth-header">
+                <div class="logo-container">
+                    <i data-lucide="sparkles" style="width: 30px; height: 30px;"></i>
+                </div>
+                <h1>AETHER</h1>
+                <p>Your Intelligent Academic Hub</p>
+            </div>
+
+            <!-- Auth Mode Switcher Tabs -->
+            <div class="auth-tabs">
+                <div id="tab-login" class="auth-tab active" onclick="switchAuthMode('login')">Sign In</div>
+                <div id="tab-signup" class="auth-tab" onclick="switchAuthMode('signup')">Create Account</div>
+            </div>
+
+            <!-- Auth Forms -->
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <!-- Login specific field / Sign up shared -->
+                <div class="form-group">
+                    <label for="auth-email">Email Address</label>
+                    <input type="email" id="auth-email" class="input-control" placeholder="tim@aether.edu" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" class="input-control" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <!-- Signup specific field (hidden by default) -->
+                <div id="signup-fields" class="hidden">
+                    <div class="form-group">
+                        <label for="auth-name">Full Name</label>
+                        <input type="text" id="auth-name" class="input-control" placeholder="Tim Harrison" autocomplete="name">
+                    </div>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p id="auth-toggle-msg">New to Aether? Click "Create Account" above to start.</p>
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.25); border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted); text-align: left;">
+                    <p style="font-weight: 600; color: white; margin-bottom: 5px; text-align: center;"><i data-lucide="key" style="width: 12px; height: 12px; display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Test Account Credentials</p>
+                    <p><strong>Email:</strong> student@aether.edu</p>
+                    <p><strong>Password:</strong> password123</p>
+                </div>
+                <p style="margin-top: 15px; font-size: 0.75rem; color: var(--text-dark); letter-spacing: 0.03em;">Developed by <span style="color: var(--primary-hover); font-weight: 500;">risindu dev</span></p>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 2: ONBOARDING WIZARD ==================== -->
+        <div id="onboarding-view" class="glass-panel onboarding-card fade-in hidden">
+            <!-- Step Indicators -->
+            <div class="step-indicator">
+                <div class="step-progress-bar" id="onboarding-progress"></div>
+                <div class="step-dot active" data-step="1">1</div>
+                <div class="step-dot" data-step="2">2</div>
+                <div class="step-dot" data-step="3">3</div>
+            </div>
+
+            <!-- Step 1: Grade Selection & Profile Name -->
+            <div id="onboarding-step-1" class="onboarding-step">
+                <h2>Choose Your Level</h2>
+                <p class="step-desc">Help us personalize your study routines based on your academic grade level.</p>
+                
+                <div class="form-group">
+                    <label>Profile Avatar</label>
+                    <div class="avatar-selector">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" class="avatar-opt selected" data-avatar="1" alt="Avatar 1">
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="2" alt="Avatar 2">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="3" alt="Avatar 3">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="4" alt="Avatar 4">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label>Academic Level</label>
+                    <div class="grade-grid">
+                        <div class="card-selector selected" data-grade="Middle School">
+                            <div class="card-selector-icon"><i data-lucide="book-open"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Middle School</h4>
+                                <p>Grades 6 - 8</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-grade="High School">
+                            <div class="card-selector-icon"><i data-lucide="award"></i></div>
+                            <div class="card-selector-info">
+                                <h4>High School</h4>
+                                <p>Grades 9 - 12</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-grade="Undergraduate">
+                            <div class="card-selector-icon"><i data-lucide="graduation-cap"></i></div>
+                            <div class="card-selector-info">
+                                <h4>College/University</h4>
+                                <p>Higher Education</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-grade="Postgraduate">
+                            <div class="card-selector-icon"><i data-lucide="library"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Postgraduate</h4>
+                                <p>Masters & Ph.D.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Subject Selection -->
+            <div id="onboarding-step-2" class="onboarding-step hidden">
+                <h2>Select Your Subjects</h2>
+                <p class="step-desc">Pick the subjects you are studying this term. We will use these to generate classes and study sessions.</p>
+                
+                <div class="form-group">
+                    <label>Core & Specialized Subjects</label>
+                    <div class="tags-container" id="subject-tags">
+                        <div class="tag-pill selected" data-subject="Mathematics">Mathematics</div>
+                        <div class="tag-pill selected" data-subject="Physics">Physics</div>
+                        <div class="tag-pill selected" data-subject="Chemistry">Chemistry</div>
+                        <div class="tag-pill" data-subject="Biology">Biology</div>
+                        <div class="tag-pill" data-subject="Computer Science">Computer Science</div>
+                        <div class="tag-pill" data-subject="Literature">Literature</div>
+                        <div class="tag-pill" data-subject="History">History</div>
+                        <div class="tag-pill" data-subject="Geography">Geography</div>
+                        <div class="tag-pill" data-subject="Economics">Economics</div>
+                        <div class="tag-pill" data-subject="Foreign Languages">Foreign Languages</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 25px;">
+                    <label for="custom-subject-input">Or Add Custom Subject</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="custom-subject-input" class="input-control" placeholder="e.g. Art History">
+                        <button type="button" class="btn btn-secondary" onclick="addCustomSubject()">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Preferences / Study Habits -->
+            <div id="onboarding-step-3" class="onboarding-step hidden">
+                <h2>Study Preferences</h2>
+                <p class="step-desc">Configure your study habits so we can fine-tune your timetable and tasks.</p>
+
+                <div class="form-group">
+                    <label for="pref-hours">Target Study Hours (per week)</label>
+                    <input type="number" id="pref-hours" class="input-control" value="15" min="2" max="60">
+                </div>
+
+                <div class="form-group">
+                    <label>Preferred Study Time of Day</label>
+                    <div class="grade-grid">
+                        <div class="card-selector selected" data-pref-time="Morning">
+                            <div class="card-selector-icon"><i data-lucide="sunrise"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Morning</h4>
+                                <p>8:00 AM - 12:00 PM</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-pref-time="Afternoon">
+                            <div class="card-selector-icon"><i data-lucide="sun"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Afternoon</h4>
+                                <p>12:00 PM - 5:00 PM</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-pref-time="Evening">
+                            <div class="card-selector-icon"><i data-lucide="sunset"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Evening</h4>
+                                <p>5:00 PM - 10:00 PM</p>
+                            </div>
+                        </div>
+                        <div class="card-selector" data-pref-time="Night">
+                            <div class="card-selector-icon"><i data-lucide="moon"></i></div>
+                            <div class="card-selector-info">
+                                <h4>Late Night</h4>
+                                <p>10:00 PM - 2:00 AM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <div class="onboarding-nav">
+                <button type="button" id="btn-back" class="btn btn-secondary hidden" onclick="prevOnboardingStep()">
+                    <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                    Back
+                </button>
+                <div style="flex-grow: 1;"></div>
+                <button type="button" id="btn-next" class="btn btn-primary" onclick="nextOnboardingStep()">
+                    Next
+                    <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 3: MAIN DASHBOARD ==================== -->
+        <div id="dashboard-view" class="dashboard-layout hidden">
+            
+            <!-- Sidebar Panel -->
+            <aside class="glass-panel sidebar">
+                <div class="sidebar-profile">
+                    <img id="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" class="sidebar-avatar" alt="Avatar">
+                    <div class="sidebar-info">
+                        <h3 id="user-display-name">Tim Harrison</h3>
+                        <p id="user-display-grade">Undergraduate</p>
+                    </div>
+                </div>
+
+                <!-- Tab Menu -->
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-tab="summary" onclick="switchDashboardTab('summary')">
+                        <i data-lucide="layout-dashboard"></i>
+                        Overview
+                    </li>
+                    <li class="nav-item" data-tab="timetable" onclick="switchDashboardTab('timetable')">
+                        <i data-lucide="calendar"></i>
+                        Timetable
+                    </li>
+                    <li class="nav-item" data-tab="study-plans" onclick="switchDashboardTab('study-plans')">
+                        <i data-lucide="clipboard-list"></i>
+                        Study Planner
+                    </li>
+                    <li class="nav-item" data-tab="ol-template" onclick="switchDashboardTab('ol-template')">
+                        <i data-lucide="layout-grid"></i>
+                        OL Template
+                    </li>
+                    <li class="nav-item" data-tab="settings" onclick="switchDashboardTab('settings')">
+                        <i data-lucide="user-cog"></i>
+                        Settings
+                    </li>
+                </ul>
+
+                <div class="sidebar-footer">
+                    <div class="nav-item nav-logout" onclick="handleLogout()">
+                        <i data-lucide="log-out"></i>
+                        Sign Out
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 0.72rem; color: var(--text-dark); letter-spacing: 0.03em; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                        Developed by <span style="color: var(--primary-hover); font-weight: 500;">risindu dev</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Panel Content -->
+            <main class="main-content">
+
+                <!-- ---------------- TAB SECTION: OVERVIEW ---------------- -->
+                <section id="tab-content-summary" class="view-section fade-in">
+                    <div class="section-header">
+                        <div>
+                            <h2 id="welcome-message">Hello, Tim!</h2>
+                            <p>Here is your academic overview for today.</p>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="dashboard-grid">
+                        <div class="glass-panel card-stat">
+                            <div class="stat-icon-box">
+                                <i data-lucide="zap"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4 id="stat-streak">0 Days</h4>
+                                <p>Study Streak</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel card-stat">
+                            <div class="stat-icon-box cyan">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4 id="stat-class-hours">0 hrs</h4>
+                                <p>Weekly Classes</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel card-stat">
+                            <div class="stat-icon-box green">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h4 id="stat-plans-count">0 Plans</h4>
+                                <p>Active Study Plans</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Agenda & Pomodoro Column -->
+                    <div class="dashboard-columns">
+                        <!-- Agenda Card -->
+                        <div class="glass-panel panel-card">
+                            <div class="panel-title">
+                                <h3>
+                                    <i data-lucide="list-todo" style="color: var(--primary);"></i>
+                                    Today's Schedule
+                                </h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);" id="today-date-str">Saturday, July 11</span>
+                            </div>
+                            <div id="agenda-list" class="agenda-list">
+                                <!-- Populated dynamically by script -->
+                            </div>
+                        </div>
+
+                        <!-- Pomodoro Card -->
+                        <div class="glass-panel panel-card" style="align-items: center; justify-content: center;">
+                            <div class="panel-title" style="width: 100%;">
+                                <h3>
+                                    <i data-lucide="timer" style="color: var(--secondary);"></i>
+                                    Focus Timer
+                                </h3>
+                            </div>
+                            <div class="pomodoro-container">
+                                <div class="timer-modes">
+                                    <button class="timer-mode-btn active" data-duration="25" onclick="setTimerMode('work')">Pomodoro</button>
+                                    <button class="timer-mode-btn" data-duration="5" onclick="setTimerMode('short')">Short Break</button>
+                                    <button class="timer-mode-btn" data-duration="15" onclick="setTimerMode('long')">Long Break</button>
+                                </div>
+                                <div class="timer-display" id="timer-time">25:00</div>
+                                <div class="timer-controls">
+                                    <button id="timer-toggle-btn" class="btn btn-primary" onclick="toggleTimer()">
+                                        <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+                                        <span>Start</span>
+                                    </button>
+                                    <button class="btn btn-secondary btn-icon" onclick="resetTimer()">
+                                        <i data-lucide="rotate-ccw" style="width: 18px; height: 18px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ---------------- TAB SECTION: TIMETABLE ---------------- -->
+                <section id="tab-content-timetable" class="view-section fade-in hidden">
+                    <div class="section-header">
+                        <div>
+                            <h2>Academic Timetable</h2>
+                            <p>Manage your weekly lectures, tutorials, and class sessions.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openClassModal()">
+                            <i data-lucide="plus"></i>
+                            Add Class
+                        </button>
+                    </div>
+
+                    <!-- Timetable Calendar Panel -->
+                    <div class="glass-panel panel-card">
+                        <div class="calendar-grid-container" id="calendar-grid-wrapper">
+                            <div class="calendar-grid" id="timetable-calendar">
+                                <!-- Calendar Grid Header -->
+                                <div class="calendar-header-cell time-header">Time</div>
+                                <div class="calendar-header-cell">Monday</div>
+                                <div class="calendar-header-cell">Tuesday</div>
+                                <div class="calendar-header-cell">Wednesday</div>
+                                <div class="calendar-header-cell">Thursday</div>
+                                <div class="calendar-header-cell">Friday</div>
+                                <div class="calendar-header-cell">Saturday</div>
+                                <div class="calendar-header-cell">Sunday</div>
+
+                                <!-- Time rows generated programmatically -->
+                            </div>
+                        </div>
+
+                        <!-- Mobile / Tablet List View -->
+                        <div id="timetable-list-view" class="hidden">
+                            <!-- Populated dynamically by app.js -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ---------------- TAB SECTION: OL TEMPLATE ---------------- -->
+                <section id="tab-content-ol-template" class="view-section fade-in hidden">
+                    <div class="section-header">
+                        <div>
+                            <h2>OL Curriculum Template</h2>
+                            <p>Reset or load the standard Sri Lankan Ordinary Level study schedule.</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-columns" style="grid-template-columns: 1.5fr 1fr;">
+                        <!-- Preview Card -->
+                        <div class="glass-panel panel-card">
+                            <div class="panel-title">
+                                <h3>
+                                    <i data-lucide="eye" style="color: var(--secondary);"></i>
+                                    Weekly Schedule Preview
+                                </h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">4:00 PM – 9:00 PM revision blocks</span>
+                            </div>
+                            
+                            <div style="overflow-x: auto; margin-top: 10px;">
+                                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                                            <th style="padding: 10px 5px;">Day</th>
+                                            <th style="padding: 10px 5px;">4:00–5:00 PM</th>
+                                            <th style="padding: 10px 5px;">5:15–6:15 PM</th>
+                                            <th style="padding: 10px 5px;">7:00–8:00 PM</th>
+                                            <th style="padding: 10px 5px;">8:15–9:00 PM</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="color: var(--text-main);">
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                            <td style="padding: 12px 5px; font-weight: 600; color: var(--primary-hover);">Mon</td>
+                                            <td style="padding: 12px 5px;">Mathematics</td>
+                                            <td style="padding: 12px 5px;">Science</td>
+                                            <td style="padding: 12px 5px;">English</td>
+                                            <td style="padding: 12px 5px; color: var(--text-dark);">Homework & Rev</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                            <td style="padding: 12px 5px; font-weight: 600; color: var(--primary-hover);">Tue</td>
+                                            <td style="padding: 12px 5px;">Sinhala</td>
+                                            <td style="padding: 12px 5px;">History</td>
+                                            <td style="padding: 12px 5px;">Buddhism/Relig</td>
+                                            <td style="padding: 12px 5px; color: var(--text-dark);">Past Paper Prac</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                            <td style="padding: 12px 5px; font-weight: 600; color: var(--primary-hover);">Wed</td>
+                                            <td style="padding: 12px 5px;">Mathematics</td>
+                                            <td style="padding: 12px 5px;">English</td>
+                                            <td style="padding: 12px 5px;">ICT</td>
+                                            <td style="padding: 12px 5px; color: var(--text-dark);">Homework & Rev</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                            <td style="padding: 12px 5px; font-weight: 600; color: var(--primary-hover);">Thu</td>
+                                            <td style="padding: 12px 5px;">Science</td>
+                                            <td style="padding: 12px 5px;">Geography</td>
+                                            <td style="padding: 12px 5px;">Tamil (2nd L)</td>
+                                            <td style="padding: 12px 5px; color: var(--text-dark);">Past Paper Prac</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 12px 5px; font-weight: 600; color: var(--primary-hover);">Fri</td>
+                                            <td style="padding: 12px 5px;">Commerce</td>
+                                            <td style="padding: 12px 5px; color: var(--secondary-hover);">Weakest Sub</td>
+                                            <td style="padding: 12px 5px;">Mixed Revision</td>
+                                            <td style="padding: 12px 5px; color: var(--success);">Plan Next Week</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="loadOLTemplate()" style="margin-top: 20px; align-self: flex-start;">
+                                <i data-lucide="sparkles"></i>
+                                Apply Template to Timetable
+                            </button>
+                        </div>
+
+                        <!-- Sidebar Info Card -->
+                        <div class="glass-panel panel-card" style="justify-content: flex-start; gap: 15px;">
+                            <div class="panel-title">
+                                <h3>
+                                    <i data-lucide="info" style="color: var(--primary);"></i>
+                                    Curriculum Insights
+                                </h3>
+                            </div>
+                            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+                                This study template is designed to cover the core <strong>Sri Lankan Ordinary Level (O/L)</strong> syllabus. It targets crucial subjects daily, ensuring consistent progress leading up to exam periods.
+                            </p>
+                            <h4 style="font-size: 0.9rem; margin-top: 10px;">Included Subjects:</h4>
+                            <ul style="list-style: none; font-size: 0.85rem; color: var(--text-main); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; margin-left: 5px;">
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Mathematics</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Science</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> English</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Sinhala</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> History</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Buddhism</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> ICT</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Geography</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Tamil (2nd L)</li>
+                                <li><i data-lucide="check" style="width: 14px; height: 14px; color: var(--success); display:inline-block; vertical-align:middle; margin-right: 5px;"></i> Commerce</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ---------------- TAB SECTION: STUDY PLANS ---------------- -->
+                <section id="tab-content-study-plans" class="view-section fade-in hidden">
+                    <div class="section-header">
+                        <div>
+                            <h2>Study Planner</h2>
+                            <p>Generate highly structured study strategies leading up to examinations.</p>
+                        </div>
+                    </div>
+
+                    <div class="study-plan-layout">
+                        <!-- Setup Wizard Panel -->
+                        <div class="glass-panel panel-card setup-form-panel">
+                            <h3 style="font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                <i data-lucide="wand-2" style="color: var(--primary); margin-right: 8px;"></i>
+                                Plan Generator
+                            </h3>
+                            
+                            <form id="study-plan-form" onsubmit="generateStudyPlan(event)">
+                                <div class="form-group">
+                                    <label for="plan-subject">Subject</label>
+                                    <select id="plan-subject" class="input-control" required>
+                                        <!-- Dynamic options -->
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="plan-exam-title">Exam/Target Name</label>
+                                    <input type="text" id="plan-exam-title" class="input-control" placeholder="Midterm Exam" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="plan-date">Exam Date</label>
+                                    <input type="date" id="plan-date" class="input-control" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="plan-confidence">Current Confidence</label>
+                                    <select id="plan-confidence" class="input-control">
+                                        <option value="1">1 - Extremely low (Needs full review)</option>
+                                        <option value="2">2 - Low (Uncomfortable with key areas)</option>
+                                        <option value="3" selected>3 - Moderate (Understand basic logic)</option>
+                                        <option value="4">4 - High (Comfortable with major subjects)</option>
+                                        <option value="5">5 - Exceptional (Ready to test)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Study Pace</label>
+                                    <div class="grade-grid" style="grid-template-columns: 1fr; gap: 8px;">
+                                        <div class="card-selector selected" data-pace="steady" style="padding: 10px 14px;">
+                                            <div class="card-selector-info">
+                                                <h4 style="font-size: 0.85rem;">Steady Pace</h4>
+                                                <p style="font-size: 0.7rem;">Balanced daily revision schedule</p>
+                                            </div>
+                                        </div>
+                                        <div class="card-selector" data-pace="cram" style="padding: 10px 14px;">
+                                            <div class="card-selector-info">
+                                                <h4 style="font-size: 0.85rem;">Cram Mode</h4>
+                                                <p style="font-size: 0.7rem;">High hours, compressed timeline focus</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Visual Tag Theme</label>
+                                    <div class="color-option-container">
+                                        <div class="color-dot-opt dot-purple selected" data-color="purple"></div>
+                                        <div class="color-dot-opt dot-cyan" data-color="cyan"></div>
+                                        <div class="color-dot-opt dot-emerald" data-color="emerald"></div>
+                                        <div class="color-dot-opt dot-amber" data-color="amber"></div>
+                                        <div class="color-dot-opt dot-rose" data-color="rose"></div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">
+                                    <i data-lucide="sparkles"></i>
+                                    Generate Plan
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Outputs / Active Tasks List -->
+                        <div class="plan-results-panel">
+                            <!-- Active Plan Summary (Dynamic) -->
+                            <div id="plan-header-container">
+                                <!-- Populated dynamically by script -->
+                            </div>
+
+                            <!-- Day by Day Checklist -->
+                            <div class="study-days-list" id="study-days-container">
+                                <div class="glass-panel empty-state">
+                                    <i data-lucide="clipboard-list" style="width: 48px; height: 48px;"></i>
+                                    <p>Select a subject to view its study plan, or generate a new plan on the left side panel.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ---------------- TAB SECTION: SETTINGS ---------------- -->
+                <section id="tab-content-settings" class="view-section fade-in hidden">
+                    <div class="section-header">
+                        <div>
+                            <h2>Settings</h2>
+                            <p>Update your credentials, level parameters, and subject tracks.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel panel-card">
+                        <div class="profile-layout">
+                            <div class="profile-avatar-block">
+                                <img id="settings-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" class="profile-avatar-large" alt="Large Avatar">
+                                <button class="btn btn-secondary btn-icon" onclick="openAvatarModal()" title="Change Avatar">
+                                    <i data-lucide="image"></i>
+                                    Change
+                                </button>
+                            </div>
+                            
+                            <form id="profile-settings-form" onsubmit="saveProfileSettings(event)" style="width: 100%;">
+                                <div class="form-group">
+                                    <label for="settings-name">Full Name</label>
+                                    <input type="text" id="settings-name" class="input-control" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="settings-grade">Academic Level</label>
+                                    <select id="settings-grade" class="input-control">
+                                        <option value="Middle School">Middle School (Grades 6 - 8)</option>
+                                        <option value="High School">High School (Grades 9 - 12)</option>
+                                        <option value="Undergraduate">College/University Undergraduate</option>
+                                        <option value="Postgraduate">Postgraduate (Masters & PhD)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="settings-hours">Weekly Target Hours</label>
+                                    <input type="number" id="settings-hours" class="input-control" min="1" max="60">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Subjects</label>
+                                    <div class="tags-container" id="settings-subjects-container">
+                                        <!-- Editable subjects list rendered dynamically -->
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <input type="text" id="settings-new-subject" class="input-control" placeholder="Add custom subject">
+                                        <button type="button" class="btn btn-secondary" onclick="addSettingsCustomSubject()">Add</button>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-lucide="check"></i>
+                                        Save Profile Details
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: ADD CLASS ==================== -->
+    <div id="class-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-card fade-in">
+            <div class="modal-header">
+                <h3 id="class-modal-title">Add Class Slot</h3>
+                <button class="modal-close" onclick="closeClassModal()"><i data-lucide="x"></i></button>
+            </div>
+            
+            <form id="class-form" onsubmit="saveClassSlot(event)">
+                <input type="hidden" id="class-edit-id">
+                
+                <div class="form-group">
+                    <label for="class-name">Class / Course Name</label>
+                    <input type="text" id="class-name" class="input-control" placeholder="Advanced Calculus" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="class-day">Day of Week</label>
+                    <select id="class-day" class="input-control" required>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label for="class-start">Start Time</label>
+                        <select id="class-start" class="input-control" onchange="adjustClassEndTime()" required>
+                            <option value="08:00">8:00 AM</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="class-end">End Time</label>
+                        <select id="class-end" class="input-control" required>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                            <option value="18:00">6:00 PM</option>
+                            <option value="19:00">7:00 PM</option>
+                            <option value="20:00">8:00 PM</option>
+                            <option value="21:00">9:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="class-location">Location / Link</label>
+                    <input type="text" id="class-location" class="input-control" placeholder="Room 402 or Zoom link">
+                </div>
+
+                <div class="form-group">
+                    <label>Color Category</label>
+                    <div class="color-option-container" id="class-color-selector">
+                        <div class="color-dot-opt dot-purple selected" data-color="purple"></div>
+                        <div class="color-dot-opt dot-cyan" data-color="cyan"></div>
+                        <div class="color-dot-opt dot-emerald" data-color="emerald"></div>
+                        <div class="color-dot-opt dot-amber" data-color="amber"></div>
+                        <div class="color-dot-opt dot-rose" data-color="rose"></div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="btn-delete-class" class="btn btn-danger hidden" onclick="deleteClassSlot()" style="margin-right: auto;">
+                        <i data-lucide="trash-2"></i>
+                        Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeClassModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: CHANGE AVATAR ==================== -->
+    <div id="avatar-modal" class="modal-overlay hidden">
+        <div class="glass-panel modal-card fade-in" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Select Profile Avatar</h3>
+                <button class="modal-close" onclick="closeAvatarModal()"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="form-group" style="text-align: center;">
+                <div class="avatar-selector" id="settings-avatar-options" style="justify-content: center; gap: 15px; margin: 20px 0;">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="1" alt="Avatar 1">
+                    <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="2" alt="Avatar 2">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="3" alt="Avatar 3">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" class="avatar-opt" data-avatar="4" alt="Avatar 4">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAvatarModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettingsAvatar()">Save Avatar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Controller Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
