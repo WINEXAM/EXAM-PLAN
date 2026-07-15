@@ -1477,6 +1477,9 @@ window.handleAIChatSubmit = async function(event) {
     if (!userMessage) return;
 
     let apiKey = localStorage.getItem('aether_gemini_api_key');
+    if (!apiKey) {
+        apiKey = 'aisure_pPPoyqdtbgtowSjxHqngD9hNlnuk4i2za55oJiQn';
+    }
 
     // Append User Message to UI
     appendAIMessage('user', userMessage);
@@ -1496,16 +1499,15 @@ window.handleAIChatSubmit = async function(event) {
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
 
-        const response = await fetch(`https://g4f.space/v1/chat/completions`, {
+        const response = await fetch(`https://api.aisure.uk/v1/chat`, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({
-                model: "gpt-4.1",
+                model: "aisure-default",
                 messages: [
                     { role: "system", content: contextPrompt },
                     { role: "user", content: userMessage }
-                ],
-                web_search: false
+                ]
             })
         });
 
@@ -1613,4 +1615,129 @@ function removeTypingIndicator(typingId) {
     if (indicator) {
         indicator.remove();
     }
+}
+
+// --- PERFORMANCE SCORE CHECK CONTROLLER ---
+function renderPerformanceTab() {
+    const subjectSelect = document.getElementById('score-subject');
+    const container = document.getElementById('performance-cards-container');
+    const avgBadge = document.getElementById('performance-overall-avg');
+    
+    // Populate subjects in dropdown
+    subjectSelect.innerHTML = '<option value="" disabled selected>Select Subject...</option>';
+    if (state.currentUser && state.currentUser.profile && state.currentUser.profile.subjects) {
+        state.currentUser.profile.subjects.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            subjectSelect.appendChild(opt);
+        });
+    }
+
+    if (!state.performance || state.performance.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i data-lucide="trending-up" style="width: 48px; height: 48px;"></i>
+                <p>No scores logged yet. Start by logging a test score!</p>
+            </div>
+        `;
+        avgBadge.textContent = '--';
+        lucide.createIcons();
+        return;
+    }
+
+    // Group scores by subject
+    const subjectData = {};
+    let totalScore = 0;
+    
+    state.performance.forEach(record => {
+        if (!subjectData[record.subject]) {
+            subjectData[record.subject] = { scores: [], total: 0 };
+        }
+        subjectData[record.subject].scores.push(record);
+        subjectData[record.subject].total += record.score;
+        totalScore += record.score;
+    });
+
+    const overallAvg = (totalScore / state.performance.length).toFixed(1);
+    avgBadge.textContent = overallAvg;
+
+    container.innerHTML = '';
+    
+    Object.keys(subjectData).forEach(subject => {
+        const data = subjectData[subject];
+        const avg = Math.round(data.total / data.scores.length);
+        const grade = calculateGrade(avg);
+        
+        // Sort scores by date descending
+        const recentScores = [...data.scores].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        const card = document.createElement('div');
+        card.className = 'perf-card';
+        card.innerHTML = `
+            <div class="perf-card-header">
+                <div>
+                    <h4 class="perf-subject">${subject}</h4>
+                    <span class="perf-avg-text">Average: ${avg}%</span>
+                </div>
+                <div class="perf-grade grade-${grade}">${grade}</div>
+            </div>
+            <div class="perf-bar-track">
+                <div class="perf-bar-fill bg-grade-${grade}" style="width: 0%;" data-target="${avg}%"></div>
+            </div>
+            <div class="perf-history">
+                ${recentScores.slice(0,3).map(s => `
+                    <div class="perf-history-item">
+                        <span>${s.testName}</span>
+                        <strong>${s.score}%</strong>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    lucide.createIcons();
+
+    // Trigger progress bar animations after render
+    setTimeout(() => {
+        document.querySelectorAll('.perf-bar-fill').forEach(bar => {
+            bar.style.width = bar.dataset.target;
+        });
+    }, 50);
+}
+
+window.addTestScore = function(event) {
+    event.preventDefault();
+    const subject = document.getElementById('score-subject').value;
+    const testName = document.getElementById('score-test-name').value.trim();
+    const score = parseInt(document.getElementById('score-value').value);
+
+    if (!subject || !testName || isNaN(score)) return;
+
+    const record = {
+        id: 'perf-' + Date.now(),
+        subject,
+        testName,
+        score,
+        date: new Date().toISOString(),
+        grade: calculateGrade(score)
+    };
+
+    if (!state.performance) state.performance = [];
+    state.performance.push(record);
+    
+    saveUserData();
+    renderPerformanceTab();
+    
+    document.getElementById('score-entry-form').reset();
+    alert('Score saved successfully!');
+};
+
+function calculateGrade(score) {
+    if (score >= 75) return 'A';
+    if (score >= 65) return 'B';
+    if (score >= 50) return 'C';
+    if (score >= 35) return 'S';
+    return 'F';
 }
