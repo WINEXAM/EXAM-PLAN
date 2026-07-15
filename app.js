@@ -1477,9 +1477,6 @@ window.handleAIChatSubmit = async function(event) {
     if (!userMessage) return;
 
     let apiKey = localStorage.getItem('aether_gemini_api_key');
-    if (!apiKey) {
-        apiKey = 'aisure_pPPoyqdtbgtowSjxHqngD9hNlnuk4i2za55oJiQn';
-    }
 
     // Append User Message to UI
     appendAIMessage('user', userMessage);
@@ -1499,15 +1496,16 @@ window.handleAIChatSubmit = async function(event) {
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
 
-        const response = await fetch(`https://api.aisure.uk/v1/chat`, {
+        const response = await fetch(`https://g4f.space/v1/chat/completions`, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify({
-                model: "aisure-default",
+                model: "gpt-4.1",
                 messages: [
                     { role: "system", content: contextPrompt },
                     { role: "user", content: userMessage }
-                ]
+                ],
+                web_search: false
             })
         });
 
