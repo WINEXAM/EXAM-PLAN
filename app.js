@@ -11,8 +11,13 @@ let state = {
     timerSeconds: 1500, // Default 25 min
     timerMode: 'work', // work, short, long
     timerIsRunning: false,
+    timerTotalSeconds: 1500,
+    alarmInterval: null,
+    timerDefaults: { work: 25, short: 5, long: 15 },
+    timerSound: 'synth',
     timetableSlots: [], // list of classes: { id, name, day, start, end, location, color }
-    studyPlans: [] // list of plans: { id, subject, examTitle, examDate, confidence, pace, color, tasks: [{ id, text, duration, completed }] }
+    studyPlans: [], // list of plans: { id, subject, examTitle, examDate, confidence, pace, color, tasks: [{ id, text, duration, completed }] }
+    performance: [] // list of test scores: { id, subject, testName, score, date, grade }
 };
 
 // Avatar URL Map
@@ -61,14 +66,17 @@ function seedDefaultUser() {
                 grade: 'High School',
                 subjects: ['Mathematics', 'Science', 'English', 'Sinhala', 'History', 'ICT'],
                 targetHours: 18,
-                prefTime: 'Evening'
+                prefTime: 'Evening',
+                timerDefaults: { work: 25, short: 5, long: 15 },
+                timerSound: 'synth'
             },
             timetable: [
                 { id: 'seed-t1', name: 'Mathematics', day: 'Monday', start: '16:00', end: '17:00', location: 'OL Class', color: 'purple' },
                 { id: 'seed-t2', name: 'Science', day: 'Monday', start: '17:00', end: '18:00', location: 'OL Class', color: 'cyan' },
                 { id: 'seed-t3', name: 'English', day: 'Monday', start: '19:00', end: '20:00', location: 'OL Class', color: 'emerald' }
             ],
-            studyPlans: []
+            studyPlans: [],
+            performance: []
         };
         db.push(defaultUser);
         localStorage.setItem('aether_users_db', JSON.stringify(db));
@@ -128,10 +136,13 @@ window.handleAuthSubmit = function(event) {
                 grade: 'Middle School',
                 subjects: ['Mathematics', 'Physics', 'Chemistry'],
                 targetHours: 15,
-                prefTime: 'Morning'
+                prefTime: 'Morning',
+                timerDefaults: { work: 25, short: 5, long: 15 },
+                timerSound: 'synth'
             },
             timetable: [],
-            studyPlans: []
+            studyPlans: [],
+            performance: []
         };
 
         db.push(newUser);
@@ -165,6 +176,9 @@ function loadUserSession(email) {
     state.currentUser = user;
     state.timetableSlots = user.timetable || [];
     state.studyPlans = user.studyPlans || [];
+    state.performance = user.performance || [];
+    state.timerDefaults = user.profile.timerDefaults || { work: 25, short: 5, long: 15 };
+    state.timerSound = user.profile.timerSound || 'synth';
 
     // Redirect to onboarding or dashboard
     if (!user.onboarded) {
@@ -191,6 +205,7 @@ function saveUserData() {
     if (index !== -1) {
         state.currentUser.timetable = state.timetableSlots;
         state.currentUser.studyPlans = state.studyPlans;
+        state.currentUser.performance = state.performance;
         db[index] = state.currentUser;
         localStorage.setItem('aether_users_db', JSON.stringify(db));
     }
@@ -405,7 +420,7 @@ window.switchDashboardTab = function(tabName) {
     });
 
     // Toggle tab sections
-    const tabs = ['summary', 'timetable', 'study-plans', 'ol-template', 'settings'];
+    const tabs = ['summary', 'timetable', 'study-plans', 'ol-template', 'performance', 'settings', 'ai'];
     tabs.forEach(t => {
         const sec = document.getElementById(`tab-content-${t}`);
         if (t === tabName) {
@@ -424,6 +439,8 @@ window.switchDashboardTab = function(tabName) {
         renderStudyPlansTab();
     } else if (tabName === 'ol-template') {
         lucide.createIcons();
+    } else if (tabName === 'performance') {
+        renderPerformanceTab();
     } else if (tabName === 'settings') {
         renderSettingsTab();
     }
@@ -527,16 +544,69 @@ function formatTime(militaryTime) {
 }
 
 // --- POMODORO TIMER SYSTEM ---
+window.enableTimerEdit = function() {
+    if (state.timerIsRunning || state.alarmInterval) return; // Don't edit while running or alarming
+    document.getElementById('timer-time').classList.add('hidden');
+    document.getElementById('timer-edit-container').classList.remove('hidden');
+    
+    const mins = Math.floor(state.timerSeconds / 60);
+    const secs = state.timerSeconds % 60;
+    document.getElementById('timer-edit-min').value = mins;
+    document.getElementById('timer-edit-sec').value = secs.toString().padStart(2, '0');
+};
+
+window.saveTimerEdit = function() {
+    let mins = parseInt(document.getElementById('timer-edit-min').value) || 0;
+    let secs = parseInt(document.getElementById('timer-edit-sec').value) || 0;
+    
+    if (mins < 0) mins = 0;
+    if (secs < 0) secs = 0;
+    if (secs > 59) secs = 59;
+    
+    state.timerSeconds = (mins * 60) + secs;
+    state.timerTotalSeconds = state.timerSeconds; // Update total for progress ring
+    
+    document.getElementById('timer-edit-container').classList.add('hidden');
+    document.getElementById('timer-time').classList.remove('hidden');
+    updateTimerDisplay();
+};
+
+window.stopAlarm = function() {
+    if (state.alarmInterval) {
+        clearInterval(state.alarmInterval);
+        state.alarmInterval = null;
+        
+        const btn = document.getElementById('timer-toggle-btn');
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+        btn.querySelector('#timer-toggle-text').textContent = 'Start';
+        btn.querySelector('svg').outerHTML = '<i data-lucide="play" style="width: 18px; height: 18px;"></i>';
+        
+        // Auto-switch modes after alarm is stopped
+        if (state.timerMode === 'work') {
+            setTimerMode('short');
+        } else {
+            setTimerMode('work');
+        }
+        lucide.createIcons();
+    }
+};
+
 window.toggleTimer = function() {
+    if (state.alarmInterval) {
+        window.stopAlarm();
+        return;
+    }
+
     const btn = document.getElementById('timer-toggle-btn');
     if (state.timerIsRunning) {
         clearInterval(state.timerInterval);
         state.timerIsRunning = false;
-        btn.querySelector('span').textContent = 'Start';
+        btn.querySelector('#timer-toggle-text').textContent = 'Start';
         btn.querySelector('svg').outerHTML = '<i data-lucide="play" style="width: 18px; height: 18px;"></i>';
     } else {
         state.timerIsRunning = true;
-        btn.querySelector('span').textContent = 'Pause';
+        btn.querySelector('#timer-toggle-text').textContent = 'Pause';
         btn.querySelector('svg').outerHTML = '<i data-lucide="pause" style="width: 18px; height: 18px;"></i>';
         
         state.timerInterval = setInterval(() => {
@@ -556,40 +626,47 @@ window.toggleTimer = function() {
 
 window.resetTimer = function() {
     clearInterval(state.timerInterval);
+    if (state.alarmInterval) {
+        clearInterval(state.alarmInterval);
+        state.alarmInterval = null;
+    }
     state.timerIsRunning = false;
     
     // Reset to current mode duration
-    if (state.timerMode === 'work') state.timerSeconds = 1500;
-    else if (state.timerMode === 'short') state.timerSeconds = 300;
-    else if (state.timerMode === 'long') state.timerSeconds = 900;
+    if (state.timerMode === 'work') state.timerSeconds = state.timerDefaults.work * 60;
+    else if (state.timerMode === 'short') state.timerSeconds = state.timerDefaults.short * 60;
+    else if (state.timerMode === 'long') state.timerSeconds = state.timerDefaults.long * 60;
+    
+    state.timerTotalSeconds = state.timerSeconds;
     
     updateTimerDisplay();
     
     const btn = document.getElementById('timer-toggle-btn');
-    btn.querySelector('span').textContent = 'Start';
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-primary');
+    btn.querySelector('#timer-toggle-text').textContent = 'Start';
     btn.querySelector('svg').outerHTML = '<i data-lucide="play" style="width: 18px; height: 18px;"></i>';
     lucide.createIcons();
 };
 
+
 window.setTimerMode = function(mode) {
     state.timerMode = mode;
     
-    // UI selection active toggles
-    const modeBtns = document.querySelectorAll('.timer-mode-btn');
-    modeBtns.forEach(btn => {
-        if (btn.dataset.duration == (mode === 'work' ? 25 : mode === 'short' ? 5 : 15)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('remove'); // safety clean
-        }
-    });
-
     // Make sure correct btn is set to active class
-    modeBtns[0].classList.toggle('active', mode === 'work');
-    modeBtns[1].classList.toggle('active', mode === 'short');
-    modeBtns[2].classList.toggle('active', mode === 'long');
+    const modeBtns = document.querySelectorAll('.timer-mode-btn');
+    modeBtns.forEach(btn => btn.classList.remove('active'));
+    
+    if (mode === 'work') modeBtns[0].classList.add('active');
+    else if (mode === 'short') modeBtns[1].classList.add('active');
+    else if (mode === 'long') modeBtns[2].classList.add('active');
+    else if (mode === 'custom') modeBtns[3].classList.add('active');
 
-    resetTimer();
+    if (mode === 'custom') {
+        window.enableTimerEdit();
+    } else {
+        resetTimer();
+    }
 };
 
 function updateTimerDisplay() {
@@ -597,39 +674,68 @@ function updateTimerDisplay() {
     const secs = state.timerSeconds % 60;
     const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     document.getElementById('timer-time').textContent = timeStr;
+    
+    // Update SVG Progress Ring
+    const ring = document.getElementById('timer-progress-ring');
+    if (ring && state.timerTotalSeconds > 0) {
+        const percent = state.timerSeconds / state.timerTotalSeconds;
+        const offset = 628.3 - (percent * 628.3);
+        ring.style.strokeDashoffset = offset;
+    }
 }
 
 function handleTimerFinished() {
-    alert(state.timerMode === 'work' ? 'Great focus block! Time for a short break.' : 'Break finished! Time to get back to studying.');
+    const btn = document.getElementById('timer-toggle-btn');
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-danger');
+    btn.querySelector('#timer-toggle-text').textContent = 'Stop Alarm';
+    btn.querySelector('svg').outerHTML = '<i data-lucide="bell-ring" style="width: 18px; height: 18px;"></i>';
+    lucide.createIcons();
     
-    // Switch modes automatically
-    if (state.timerMode === 'work') {
-        setTimerMode('short');
-    } else {
-        setTimerMode('work');
-    }
+    // Play immediately once
+    playTimerChime();
+    
+    // Loop every 2 seconds
+    state.alarmInterval = setInterval(() => {
+        playTimerChime();
+    }, 2000);
 }
 
 function playTimerChime() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Custom synthesizer chime sound using oscillator nodes
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
-        
-        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-        
-        osc.start();
-        osc.stop(audioCtx.currentTime + 1.2);
+        if (state.timerSound === 'digital') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        } else if (state.timerSound === 'bell') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.0);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 2.0);
+        } else {
+            // Default Synth Beep
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.2);
+        }
     } catch (e) {
         console.warn('Audio Context failed to play chime due to interaction rules: ', e);
     }
@@ -1044,25 +1150,25 @@ function buildStudyTasks(daysRemaining, confidence, pace) {
 
     const taskTemplates = {
         lowConfidence: [
-            "Read primary textbook chapters and highlight definitions.",
-            "Watch video tutorials explaining foundational logic.",
-            "Complete basic homework questions to build trust.",
-            "Draft clean cheat sheets listing equations or rules.",
-            "Practice core derivations step-by-step.",
-            "Solve flashcards containing terminology.",
-            "Attempt mock midterms under open-book terms.",
-            "Fix common mistakes made during practice sets.",
-            "Review summaries and sleep early."
+            "ප්‍රධාන පෙළපොත් පරිච්ඡේද කියවා අර්ථ දැක්වීම් උද්දීපනය කරන්න.",
+            "මූලික තර්ක විස්තර කරන වීඩියෝ නිබන්ධන නරඹන්න.",
+            "විශ්වාසය ගොඩනැගීම සඳහා මූලික ගෙදර වැඩ ප්‍රශ්න සම්පූර්ණ කරන්න.",
+            "සමීකරණ හෝ නීති ලැයිස්තුගත කරමින් කෙටි සටහන් සකසන්න.",
+            "ප්‍රධාන ව්‍යුත්පන්නයන් පියවරෙන් පියවර පුහුණු වන්න.",
+            "පාරිභාෂික වචන අඩංගු ෆ්ලෑෂ් කාඩ්පත් විසඳන්න.",
+            "විවෘත පොත් ක්‍රමයට පෙරහුරු විභාග සඳහා උත්සාහ කරන්න.",
+            "පුහුණු වීමේදී සිදුවන පොදු වැරදි නිවැරදි කරන්න.",
+            "සාරාංශ සමාලෝචනය කර වේලාසනින් නින්දට යන්න."
         ],
         highConfidence: [
-            "Outline key syllabus modules briefly.",
-            "Complete high-difficulty sample problems.",
-            "Sit for standard examination papers timed.",
-            "Engage in revision games or quiz drills.",
-            "Solve complex past exam questions.",
-            "Analyze and write down test-taking strategies.",
-            "Teach complex concepts to a study partner.",
-            "Light review of visual mind-maps."
+            "ප්‍රධාන විෂය නිර්දේශ මොඩියුල කෙටියෙන් දක්වන්න.",
+            "ඉහළ දුෂ්කරතා සහිත ආදර්ශ ගැටලු සම්පූර්ණ කරන්න.",
+            "කාලය මැන ප්‍රමිතිගත විභාග ප්‍රශ්න පත්‍ර සඳහා පෙනී සිටින්න.",
+            "පුනරීක්ෂණ ක්‍රීඩා හෝ ප්‍රශ්න විචාරාත්මක අභ්‍යාසවල යෙදෙන්න.",
+            "සංකීර්ණ පසුගිය විභාග ප්‍රශ්න විසඳන්න.",
+            "විභාගයට මුහුණ දීමේ උපාය මාර්ග විශ්ලේෂණය කර ලියා ගන්න.",
+            "අධ්‍යයන සහකරුවෙකුට සංකීර්ණ සංකල්ප උගන්වන්න.",
+            "දෘශ්‍ය මනස-සිතියම්වල සැහැල්ලු සමාලෝචනයක යෙදෙන්න."
         ]
     };
 
@@ -1081,10 +1187,10 @@ function buildStudyTasks(daysRemaining, confidence, pace) {
 
         // Custom day suffixes
         if (day === actualDays) {
-            taskText = "Perform final overview of formulas, summaries, and sleep at least 8 hours.";
+            taskText = "සූත්‍ර, සාරාංශ පිළිබඳ අවසාන දළ විශ්ලේෂණයක් සිදුකර අවම වශයෙන් පැය 8ක්වත් නිදාගන්න.";
             baseMinutes = 30;
         } else if (day === actualDays - 1) {
-            taskText = "Complete comprehensive timed practice mock exam to lock in readiness.";
+            taskText = "සූදානම තහවුරු කර ගැනීම සඳහා කාලය මැන විස්තීරණ පෙරහුරු විභාගයක් සම්පූර්ණ කරන්න.";
         }
 
         tasks.push({
@@ -1224,6 +1330,9 @@ function renderSettingsTab() {
     document.getElementById('settings-name').value = state.currentUser.name;
     document.getElementById('settings-grade').value = p.grade;
     document.getElementById('settings-hours').value = p.targetHours;
+    
+    const storedApiKey = localStorage.getItem('aether_gemini_api_key') || '';
+    document.getElementById('settings-api-key').value = storedApiKey;
 
     renderSettingsSubjects();
 }
@@ -1270,10 +1379,13 @@ window.saveProfileSettings = function(event) {
     const name = document.getElementById('settings-name').value.trim();
     const grade = document.getElementById('settings-grade').value;
     const targetHours = parseInt(document.getElementById('settings-hours').value) || 15;
+    const apiKey = document.getElementById('settings-api-key').value.trim();
 
     state.currentUser.name = name;
     state.currentUser.profile.grade = grade;
     state.currentUser.profile.targetHours = targetHours;
+    
+    localStorage.setItem('aether_gemini_api_key', apiKey);
 
     saveUserData();
     alert('Profile configurations updated successfully!');
@@ -1319,3 +1431,186 @@ window.saveSettingsAvatar = function() {
         document.getElementById('user-avatar').src = AVATAR_MAP[selected.dataset.avatar];
     }
 };
+
+// --- TIMER SETTINGS MODAL ---
+window.openTimerSettings = function() {
+    document.getElementById('setting-work-dur').value = state.timerDefaults.work;
+    document.getElementById('setting-short-dur').value = state.timerDefaults.short;
+    document.getElementById('setting-long-dur').value = state.timerDefaults.long;
+    document.getElementById('setting-sound').value = state.timerSound;
+    document.getElementById('timer-settings-modal').classList.remove('hidden');
+};
+
+window.closeTimerSettings = function() {
+    document.getElementById('timer-settings-modal').classList.add('hidden');
+};
+
+window.saveTimerSettings = function() {
+    const work = parseInt(document.getElementById('setting-work-dur').value) || 25;
+    const short = parseInt(document.getElementById('setting-short-dur').value) || 5;
+    const long = parseInt(document.getElementById('setting-long-dur').value) || 15;
+    const sound = document.getElementById('setting-sound').value;
+
+    state.timerDefaults = { work, short, long };
+    state.timerSound = sound;
+    
+    // Save to user profile if logged in
+    if (state.currentUser && state.currentUser.profile) {
+        state.currentUser.profile.timerDefaults = state.timerDefaults;
+        state.currentUser.profile.timerSound = state.timerSound;
+        saveUserData();
+    }
+    
+    closeTimerSettings();
+    
+    // Update active timer if not custom mode
+    if (state.timerMode !== 'custom') {
+        resetTimer();
+    }
+};
+
+// --- AI STUDY ASSISTANT CONTROLLER ---
+window.handleAIChatSubmit = async function(event) {
+    event.preventDefault();
+    const inputField = document.getElementById('ai-chat-input');
+    const userMessage = inputField.value.trim();
+    if (!userMessage) return;
+
+    let apiKey = localStorage.getItem('aether_gemini_api_key');
+
+    // Append User Message to UI
+    appendAIMessage('user', userMessage);
+    inputField.value = '';
+
+    // Show Typing Indicator
+    const typingId = appendTypingIndicator();
+
+    // Prepare Context Prompt
+    const contextPrompt = buildAIContextPrompt(userMessage);
+
+    try {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (apiKey) {
+            headers['Authorization'] = `Bearer ${apiKey}`;
+        }
+
+        const response = await fetch(`https://g4f.space/v1/chat/completions`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                model: "gpt-4.1",
+                messages: [
+                    { role: "system", content: contextPrompt },
+                    { role: "user", content: userMessage }
+                ],
+                web_search: false
+            })
+        });
+
+        const data = await response.json();
+        removeTypingIndicator(typingId);
+
+        if (data.error) {
+            appendAIMessage('system', `API Error: ${data.error.message || JSON.stringify(data.error)}`);
+        } else if (data.choices && data.choices.length > 0) {
+            const aiText = data.choices[0].message.content;
+            appendAIMessage('assistant', aiText);
+        } else {
+            appendAIMessage('system', 'I could not generate a response. Please try again.');
+        }
+
+    } catch (error) {
+        removeTypingIndicator(typingId);
+        appendAIMessage('system', 'Failed to connect to the G4F API. Please check your internet connection.');
+        console.error("G4F API Fetch Error: ", error);
+    }
+};
+
+function buildAIContextPrompt(userQuery) {
+    const p = state.currentUser.profile;
+    
+    let context = `You are the "Aether AI Study Assistant", an expert, encouraging personal tutor designed to help a student succeed.\n\n`;
+    context += `--- STUDENT PROFILE ---\n`;
+    context += `Name: ${state.currentUser.name}\n`;
+    context += `Academic Level: ${p.grade}\n`;
+    context += `Subjects: ${p.subjects.join(', ')}\n`;
+    context += `Preferred Study Time: ${p.prefTime}\n\n`;
+
+    if (state.timetableSlots && state.timetableSlots.length > 0) {
+        context += `--- CURRENT TIMETABLE SCHEDULING ---\n`;
+        const tt = state.timetableSlots.slice(0, 5).map(s => `${s.day} ${s.start}-${s.end}: ${s.name}`).join('\n');
+        context += tt + `\n(List truncated for brevity)\n\n`;
+    }
+
+    if (state.studyPlans && state.studyPlans.length > 0) {
+        context += `--- ACTIVE STUDY PLANS ---\n`;
+        const plans = state.studyPlans.map(sp => `Target: ${sp.examTitle} (${sp.subject}). Date: ${sp.examDate}. Pace: ${sp.pace}.`).join('\n');
+        context += plans + `\n\n`;
+    }
+
+    context += `--- INSTRUCTIONS ---\n`;
+    context += `1. Provide specific, actionable advice considering the student's profile and schedule.\n`;
+    context += `2. If answering academic questions, explain concepts clearly based on their Academic Level.\n`;
+    context += `3. Format your response cleanly using Markdown (bolding, lists, code blocks if necessary) so it renders well in the UI. DO NOT use H1 headers, stick to H3 or bold text. Keep it reasonably concise.\n\n`;
+    
+    context += `USER QUESTION: "${userQuery}"`;
+
+    return context;
+}
+
+function appendAIMessage(senderType, markdownText) {
+    const history = document.getElementById('ai-chat-history');
+    
+    const bubble = document.createElement('div');
+    bubble.className = `ai-msg-bubble ${senderType === 'user' ? 'ai-user-msg' : senderType === 'system' ? 'ai-sys-msg' : 'ai-assistant-msg'}`;
+    
+    if (senderType === 'assistant') {
+        bubble.innerHTML = `<i data-lucide="sparkles" style="color: var(--secondary); margin-bottom: 5px;"></i>`;
+    } else if (senderType === 'system') {
+        bubble.innerHTML = `<i data-lucide="alert-triangle" style="color: var(--primary); margin-bottom: 5px;"></i>`;
+    }
+
+    const contentBox = document.createElement('div');
+    
+    // Naive Markdown to HTML conversion for the UI (Bold and Lists)
+    let htmlText = markdownText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    
+    contentBox.innerHTML = `<p>${htmlText}</p>`;
+    bubble.appendChild(contentBox);
+    
+    history.appendChild(bubble);
+    history.scrollTop = history.scrollHeight;
+    lucide.createIcons();
+}
+
+function appendTypingIndicator() {
+    const history = document.getElementById('ai-chat-history');
+    const typingId = 'typing-' + Date.now();
+    
+    const indicator = document.createElement('div');
+    indicator.id = typingId;
+    indicator.className = 'ai-typing-indicator fade-in';
+    indicator.innerHTML = `
+        <div class="ai-typing-dot"></div>
+        <div class="ai-typing-dot"></div>
+        <div class="ai-typing-dot"></div>
+    `;
+    
+    history.appendChild(indicator);
+    history.scrollTop = history.scrollHeight;
+    
+    return typingId;
+}
+
+function removeTypingIndicator(typingId) {
+    const indicator = document.getElementById(typingId);
+    if (indicator) {
+        indicator.remove();
+    }
+}

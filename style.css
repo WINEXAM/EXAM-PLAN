@@ -726,11 +726,17 @@ a:hover {
     gap: 24px;
 }
 
+@keyframes cardEntrance {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .panel-card {
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .panel-title {
@@ -1411,4 +1417,180 @@ a:hover {
 .list-class-loc {
     font-size: 0.75rem;
     color: var(--text-dark);
+}
+
+/* --- AI CHAT INTERFACE --- */
+.ai-msg-bubble {
+    padding: 15px 20px;
+    border-radius: var(--radius-md);
+    max-width: 85%;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    animation: fadeUp 0.3s ease forwards;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-sys-msg, .ai-assistant-msg {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    align-self: flex-start;
+    border-top-left-radius: 4px;
+}
+
+.ai-user-msg {
+    background: var(--primary);
+    color: white;
+    align-self: flex-end;
+    border-top-right-radius: 4px;
+}
+
+.ai-msg-bubble p {
+    margin-bottom: 8px;
+}
+.ai-msg-bubble p:last-child {
+    margin-bottom: 0;
+}
+.ai-msg-bubble strong {
+    color: var(--secondary);
+}
+.ai-user-msg strong {
+    color: #fff;
+}
+.ai-msg-bubble ul, .ai-msg-bubble ol {
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+.ai-msg-bubble li {
+    margin-bottom: 4px;
+}
+
+.ai-typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    align-self: flex-start;
+    border-top-left-radius: 4px;
+    width: fit-content;
+}
+
+/* --- PERFORMANCE TAB STYLES --- */
+.average-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+.average-badge span {
+    color: var(--secondary);
+    font-size: 1.1rem;
+}
+
+.performance-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+}
+
+.perf-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: var(--transition-fast);
+}
+.perf-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.perf-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.perf-subject {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.perf-avg-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.perf-grade {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.perf-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.perf-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0%;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.perf-history {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 8px;
+    max-height: 60px;
+    overflow-y: auto;
+}
+.perf-history-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+/* Grade Colors */
+.grade-A { color: #10b981; } /* Emerald */
+.grade-B { color: #3b82f6; } /* Blue */
+.grade-C { color: #f59e0b; } /* Amber */
+.grade-S { color: #8b5cf6; } /* Purple */
+.grade-F { color: #f43f5e; } /* Rose */
+
+.bg-grade-A { background: #10b981; }
+.bg-grade-B { background: #3b82f6; }
+.bg-grade-C { background: #f59e0b; }
+.bg-grade-S { background: #8b5cf6; }
+.bg-grade-F { background: #f43f5e; }
+
+.ai-typing-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.ai-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.ai-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
 }
