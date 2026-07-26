@@ -1,6 +1,6 @@
 {
-  "name": "aether-student-generator",
-  "version": "1.0.0",
+  "name": "winexam-student-generator",
+  "version": "1.0.1",
   "description": "Student Timetable & Study Plan Generator with focus widgets, onboarding, and dashboard panels.",
   "main": "index.html",
   "scripts": {
@@ -12,9 +12,9 @@
     "education",
     "timetable",
     "planner",
-    "pomodoro"
+    "focus time"
   ],
-  "author": "Aether Team",
+  "author": "winexam Team",
   "license": "MIT",
   "devDependencies": {
     "vite": "^5.0.0"
