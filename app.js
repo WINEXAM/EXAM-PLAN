@@ -22,7 +22,7 @@ let state = {
 
 // Avatar URL Map
 const AVATAR_MAP = {
-    '1': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    '1': 'file:///C:/Users/risindu/.gemini/antigravity/brain/5531b880-3d08-4783-9cdc-afcb0518aaf9/media__1785019470221.jpg',
     '2': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150',
     '3': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
     '4': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150'
